@@ -7,6 +7,7 @@ const data = useDataStore()
 onBeforeMount(async () => {
   const res = await fetch(import.meta.env.BASE_URL + '/assets/data/data.json')
   data.json = await res.json()
+  data.isDataReady = true
 })
 </script>
 

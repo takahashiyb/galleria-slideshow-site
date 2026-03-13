@@ -1,11 +1,14 @@
 <script lang="ts" setup>
 import HeaderSection from '@/components/HeaderSection.vue'
 import ThumbnailCard from '@/components/ThumbnailCard.vue'
+import { useDataStore } from '@/stores/data'
+
+const data = useDataStore()
 </script>
 <template>
-  <HeaderSection />
+  <HeaderSection v-if="data.isDataReady" />
   <main>
-    <ThumbnailCard />
+    <ThumbnailCard v-if="data.isDataReady" />
   </main>
 </template>
 <style lang="scss" scoped>
@@ -13,6 +16,10 @@ import ThumbnailCard from '@/components/ThumbnailCard.vue'
 @use '@/assets/styles/functions.scss' as f;
 
 main {
+  max-width: 100em;
+
+  justify-self: center;
+
   padding-inline: v.$spacing-0400;
 
   justify-content: center;

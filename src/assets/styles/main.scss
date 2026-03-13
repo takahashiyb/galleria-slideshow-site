@@ -68,7 +68,7 @@ $text-7: (
   font-weight: 700,
 );
 $text-1-mobile: (
-  font-size: f.rem(100),
+  font-size: f.rem(80),
   line-height: 1,
   letter-spacing: f.em(0),
   font-weight: 700,
@@ -104,6 +104,8 @@ $text-5-mobile: (
   margin: 0;
   box-sizing: border-box;
   word-wrap: break-word;
+
+  font-family: 'Libre Baskerville', serif;
 }
 
 html {
@@ -139,14 +141,17 @@ html {
 
 .details__button--view-image {
   @include f.flat-type($text-7);
+  color: $white;
 }
 
 .details__name {
   @include f.responsive-type($text-2-mobile, $text-2, $text-2);
+  color: $black;
 }
 
 .details__artist {
   @include f.flat-type($text-4);
+  color: $grey-400;
 }
 
 .details__year {

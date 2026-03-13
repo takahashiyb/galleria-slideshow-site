@@ -36,10 +36,22 @@ onBeforeMount(() => {
 @use '@/assets/styles/functions.scss' as f;
 
 header {
+  background-color: v.$white;
+
   @include f.responsive-grid(v.$spacing-0300, v.$spacing-0100, 3, 100em);
   align-items: center;
+
   padding-top: v.$spacing-0300;
   padding-bottom: v.$spacing-0300;
+
+  border-bottom: 2px solid rgba(v.$grey-150, 100%);
+
+  margin-bottom: v.$spacing-0500;
+
+  position: sticky;
+  top: 0;
+
+  z-index: 99;
 }
 
 header img {

@@ -1,12 +1,15 @@
 <script lang="ts" setup>
 import { useDataStore } from '@/stores/data'
+import { useDialogStore } from '@/stores/dialog'
 import type { Painting } from '@/types/types'
-import { ref, onBeforeMount } from 'vue'
+import { ref, watch, onBeforeMount } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
 
 const data = useDataStore()
+
+const dialog = useDialogStore()
 
 const painting = ref<Painting>({
   name: '',
@@ -14,25 +17,33 @@ const painting = ref<Painting>({
   description: '',
   source: '',
   artist: {
-    image: '',
+    image: './assets/starry-night/artist.jpg',
     name: '',
   },
   images: {
-    thumbnail: '',
+    thumbnail: './assets/starry-night/thumbnail.jpg',
     hero: {
-      small: '',
-      large: '',
+      small: './assets/starry-night/hero-small.jpg',
+      large: './assets/starry-night/hero-large.jpg',
     },
-    gallery: '',
+    gallery: './assets/starry-night/gallery.jpg',
   },
 })
 
 const base = import.meta.env.BASE_URL
 
+watch(
+  () => route.params.name,
+  (newId, oldId) => {
+    painting.value = data.findCurrentPage(newId as string) as Painting
+    data.lastSeen = data.findCurrentIndex(route.params.name as string)
+  },
+)
+
 onBeforeMount(() => {
-  painting.value = data.json.find(
-    (i) => route.params.name === i.name.replace(/ /g, '').trim(),
-  ) as Painting
+  painting.value = data.findCurrentPage(route.params.name as string) as Painting
+
+  data.lastSeen = data.findCurrentIndex(route.params.name as string)
 })
 </script>
 <template>
@@ -47,7 +58,7 @@ onBeforeMount(() => {
         :src="base + painting.images.hero.small.replace('./assets', '/assets/images')"
       />
     </picture>
-    <button class="details__button--view-image">
+    <button class="details__button--view-image" @click="dialog.openDialog">
       <img src="@/assets/icons/icon-view-image.svg" alt="view image icon" />
       <span>VIEW IMAGE</span>
     </button>
@@ -63,7 +74,9 @@ onBeforeMount(() => {
     />
     <p class="details__year">{{ painting.year }}</p>
     <article class="details__description">{{ painting.description }}</article>
-    <a class="details__source" :href="painting.source">GO TO SOURCE</a>
+    <a class="details__source" :href="painting.source" target="blank"
+      ><span class="sr-only">clicking this link will redirect to source site</span>GO TO SOURCE</a
+    >
   </section>
 </template>
 
@@ -132,6 +145,8 @@ onBeforeMount(() => {
 
   grid-column: 2/7;
   grid-row: 1;
+
+  cursor: pointer;
 }
 
 .details__year {
@@ -163,6 +178,7 @@ onBeforeMount(() => {
 
   margin-top: v.$spacing-0800;
   margin-bottom: v.$spacing-0800;
+  cursor: pointer;
 }
 
 @media (min-width: f.em(700)) {
@@ -280,6 +296,8 @@ onBeforeMount(() => {
   .details__source {
     grid-column: 11/13;
     grid-row: 3;
+
+    z-index: 2;
   }
 }
 </style>

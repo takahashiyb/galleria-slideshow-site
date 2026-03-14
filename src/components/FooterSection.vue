@@ -1,12 +1,26 @@
 <script lang="ts" setup>
 import { useDataStore } from '@/stores/data'
 import type { Painting } from '@/types/types'
-import { ref, onBeforeMount } from 'vue'
+import { ref, watch, onBeforeMount } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
 
 const data = useDataStore()
+
+// watch for param changes
+watch(
+  () => route.params.name,
+  (newId, oldId) => {
+    painting.value = data.findCurrentPage(newId as string) as Painting
+
+    const index = data.findCurrentIndex(newId as string) as number
+
+    beforePainting.value = { name: 'details', params: { name: data.getBefore(index) } }
+
+    nextPainting.value = { name: 'details', params: { name: data.getNext(index) } }
+  },
+)
 
 const painting = ref<Painting>({
   name: '',
@@ -14,23 +28,30 @@ const painting = ref<Painting>({
   description: '',
   source: '',
   artist: {
-    image: '',
+    image: './assets/starry-night/artist.jpg',
     name: '',
   },
   images: {
-    thumbnail: '',
+    thumbnail: './assets/starry-night/thumbnail.jpg',
     hero: {
-      small: '',
-      large: '',
+      small: './assets/starry-night/hero-small.jpg',
+      large: './assets/starry-night/hero-large.jpg',
     },
-    gallery: '',
+    gallery: './assets/starry-night/gallery.jpg',
   },
 })
 
+const nextPainting = ref()
+const beforePainting = ref()
+
 onBeforeMount(() => {
-  painting.value = data.json.find(
-    (i) => route.params.name === i.name.replace(/ /g, '').trim(),
-  ) as Painting
+  painting.value = data.findCurrentPage(route.params.name as string) as Painting
+
+  const index = data.findCurrentIndex(route.params.name as string) as number
+
+  beforePainting.value = { name: 'details', params: { name: data.getBefore(index) } }
+
+  nextPainting.value = { name: 'details', params: { name: data.getNext(index) } }
 })
 </script>
 <template>
@@ -43,13 +64,13 @@ onBeforeMount(() => {
       <p class="footer__artist">{{ painting.artist.name }}</p>
     </div>
     <div class="footer__control">
-      <RouterLink :to="{}">
-        <span class="sr-only">click to redirect previous painting</span>
+      <RouterLink :to="beforePainting">
         <img src="/src/assets//icons//icon-back-button.svg" alt="back icon" />
+        <span class="sr-only">click to redirect previous painting</span>
       </RouterLink>
-      <RouterLink :to="{}">
-        <span class="sr-only">click to redirect next painting</span>
+      <RouterLink :to="nextPainting">
         <img src="/src/assets//icons//icon-next-button.svg" alt="next icon" />
+        <span class="sr-only">click to redirect next painting</span>
       </RouterLink>
     </div>
   </footer>
@@ -59,6 +80,7 @@ onBeforeMount(() => {
 @use '@/assets/styles/functions.scss' as f;
 footer {
   background-color: v.$white;
+  min-width: 100%;
 
   @include f.responsive-grid(v.$spacing-0300, v.$spacing-0100, 2, 100em);
   align-items: center;
@@ -66,7 +88,7 @@ footer {
   padding-top: v.$spacing-0200;
   padding-bottom: v.$spacing-0200;
 
-  position: sticky;
+  position: fixed;
   bottom: 0;
 
   z-index: 99;

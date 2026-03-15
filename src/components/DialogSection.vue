@@ -33,16 +33,34 @@ const painting = ref<Painting>({
 
 const base = import.meta.env.BASE_URL
 
+function onLoadPage(id: string) {
+  painting.value = data.findCurrentPage(id as string) as Painting
+}
+
 watch(
   () => route.params.name,
   (newId, oldId) => {
-    painting.value = data.findCurrentPage(newId as string) as Painting
+    onLoadPage(newId as string)
   },
 )
 
 onBeforeMount(() => {
-  painting.value = data.findCurrentPage(route.params.name as string) as Painting
+  const id = route.params.name as string
+
+  onLoadPage(id)
 })
+
+// This freezes the scroll
+watch(
+  () => dialog.isDialogOpen,
+  (newState, oldState) => {
+    if (newState) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+  },
+)
 </script>
 
 <template>
@@ -69,6 +87,13 @@ dialog {
   z-index: 199;
 
   place-content: center;
+
+  padding: v.$spacing-0300;
+}
+
+.dialog__container img {
+  width: 100%;
+  object-fit: contain;
 }
 
 dialog[open] {

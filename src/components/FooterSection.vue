@@ -47,6 +47,8 @@ function onLoadPage(newId: string) {
 }
 
 async function isRunning() {
+  clearTimer()
+
   const start = Date.now()
 
   intervalId = setInterval(() => {
@@ -65,6 +67,15 @@ async function isRunning() {
       params: { name: data.getNext(data.findCurrentIndex(route.params.name as string) as number) },
     })
   }, 5000)
+}
+
+function clearTimer() {
+  if (intervalId!) {
+    clearInterval(intervalId)
+  }
+  if (timeoutID!) {
+    clearTimeout(timeoutID)
+  }
 }
 
 // watch for param changes
@@ -86,12 +97,7 @@ onBeforeMount(() => {
 })
 
 onUnmounted(() => {
-  if (intervalId!) {
-    clearInterval(intervalId)
-  }
-  if (timeoutID!) {
-    clearTimeout(timeoutID)
-  }
+  clearTimer()
 })
 </script>
 <template>

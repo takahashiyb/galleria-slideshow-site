@@ -27,7 +27,12 @@ onBeforeMount(() => {
 <template>
   <header>
     <img src="@/assets/icons/logo.svg" alt="site logo" />
-    <RouterLink :to="page" class="header__link--slideshow">{{ slideshowText }}</RouterLink>
+    <RouterLink :to="page" class="header__link--slideshow"
+      ><span class="sr-only"
+        >redirects to
+        {{ slideshowText === 'START SLIDESHOW' ? 'slideshow page' : 'homepage' }}</span
+      >{{ slideshowText }}</RouterLink
+    >
   </header>
 </template>
 

@@ -71,6 +71,7 @@ function openDialogOverlay() {
     <button class="details__button--view-image" @click="openDialogOverlay">
       <img src="@/assets/icons/icon-view-image.svg" alt="view image icon" />
       <span>VIEW IMAGE</span>
+      <span class="sr-only">click to see higher quality image</span>
     </button>
     <div class="details__container">
       <div class="details__info">
@@ -275,7 +276,7 @@ function openDialogOverlay() {
   }
 
   .details__container {
-    grid-column: 6/10;
+    grid-column: 6/11;
 
     padding-left: v.$spacing-0800;
     padding-bottom: v.$spacing-0800;

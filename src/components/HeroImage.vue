@@ -32,19 +32,29 @@ const painting = ref<Painting>({
 
 const base = import.meta.env.BASE_URL
 
+function onLoadPage(newId: string) {
+  painting.value = data.findCurrentPage(newId as string) as Painting
+
+  data.lastSeen = data.findCurrentIndex(route.params.name as string)
+}
+
 watch(
-  () => route.params.name,
+  () => route.params.name as string,
   (newId, oldId) => {
-    painting.value = data.findCurrentPage(newId as string) as Painting
-    data.lastSeen = data.findCurrentIndex(route.params.name as string)
+    onLoadPage(newId)
   },
 )
 
 onBeforeMount(() => {
-  painting.value = data.findCurrentPage(route.params.name as string) as Painting
+  const newId = route.params.name as string
 
-  data.lastSeen = data.findCurrentIndex(route.params.name as string)
+  onLoadPage(newId)
 })
+
+function openDialogOverlay() {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+  dialog.openDialog()
+}
 </script>
 <template>
   <section class="hero__container">
@@ -58,7 +68,7 @@ onBeforeMount(() => {
         :src="base + painting.images.hero.small.replace('./assets', '/assets/images')"
       />
     </picture>
-    <button class="details__button--view-image" @click="dialog.openDialog">
+    <button class="details__button--view-image" @click="openDialogOverlay">
       <img src="@/assets/icons/icon-view-image.svg" alt="view image icon" />
       <span>VIEW IMAGE</span>
     </button>

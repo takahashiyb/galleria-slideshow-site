@@ -1,26 +1,14 @@
 <script lang="ts" setup>
 import { useDataStore } from '@/stores/data'
 import type { Painting } from '@/types/types'
-import { ref, watch, onBeforeMount } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, watch, onBeforeMount, onUnmounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 
+const router = useRouter()
+
 const data = useDataStore()
-
-// watch for param changes
-watch(
-  () => route.params.name,
-  (newId, oldId) => {
-    painting.value = data.findCurrentPage(newId as string) as Painting
-
-    const index = data.findCurrentIndex(newId as string) as number
-
-    beforePainting.value = { name: 'details', params: { name: data.getBefore(index) } }
-
-    nextPainting.value = { name: 'details', params: { name: data.getNext(index) } }
-  },
-)
 
 const painting = ref<Painting>({
   name: '',
@@ -43,21 +31,73 @@ const painting = ref<Painting>({
 
 const nextPainting = ref()
 const beforePainting = ref()
+const timer = ref(0)
 
-onBeforeMount(() => {
-  painting.value = data.findCurrentPage(route.params.name as string) as Painting
+let intervalId = null
+let timeoutID = null
 
-  const index = data.findCurrentIndex(route.params.name as string) as number
+function onLoadPage(newId: string) {
+  painting.value = data.findCurrentPage(newId as string) as Painting
+
+  const index = data.findCurrentIndex(newId as string) as number
 
   beforePainting.value = { name: 'details', params: { name: data.getBefore(index) } }
 
   nextPainting.value = { name: 'details', params: { name: data.getNext(index) } }
+}
+
+async function isRunning() {
+  const start = Date.now()
+
+  intervalId = setInterval(() => {
+    const elapsed = Date.now() - start
+    const progress = Math.min(elapsed / 5000, 1)
+    timer.value = progress * 100
+
+    if (progress === 1) {
+      clearInterval(intervalId!)
+    }
+  }, 16)
+
+  timeoutID = setTimeout(() => {
+    router.push({
+      name: 'details',
+      params: { name: data.getNext(data.findCurrentIndex(route.params.name as string) as number) },
+    })
+  }, 5000)
+}
+
+// watch for param changes
+watch(
+  () => route.params.name,
+  (newId, oldId) => {
+    onLoadPage(newId as string)
+
+    isRunning()
+  },
+)
+
+onBeforeMount(() => {
+  const newId = route.params.name as string
+
+  onLoadPage(newId as string)
+
+  isRunning()
+})
+
+onUnmounted(() => {
+  if (intervalId!) {
+    clearInterval(intervalId)
+  }
+  if (timeoutID!) {
+    clearTimeout(timeoutID)
+  }
 })
 </script>
 <template>
   <footer>
     <div class="countdown-bar">
-      <div class="progress"></div>
+      <div class="progress" :style="`width: ${timer}%`"></div>
     </div>
     <div class="footer__current">
       <p class="footer__name">{{ painting.name }}</p>
@@ -78,6 +118,7 @@ onBeforeMount(() => {
 <style lang="scss" scoped>
 @use '@/assets/styles/main.scss' as v;
 @use '@/assets/styles/functions.scss' as f;
+
 footer {
   background-color: v.$white;
   min-width: 100%;
@@ -124,7 +165,6 @@ footer {
 
 .progress {
   height: 100%;
-  width: 10%;
   background-color: rgba(v.$black, 100%);
 }
 </style>

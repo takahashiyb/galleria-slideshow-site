@@ -37,6 +37,11 @@ a {
   grid-template-rows: 1fr min-content;
 }
 
+.card__artist {
+  padding-top: v.$spacing-0100;
+  color: rgba(v.$white, 75%);
+}
+
 .card img {
   grid-row: 1/-1;
   grid-column: 1;

@@ -22,6 +22,8 @@ main {
 
   padding-inline: v.$spacing-0400;
 
+  padding-bottom: v.$spacing-0500;
+
   justify-content: center;
 }
 

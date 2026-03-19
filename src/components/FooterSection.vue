@@ -48,25 +48,30 @@ function onLoadPage(newId: string) {
 
 async function isRunning() {
   clearTimer()
+  timer.value = 0
 
-  const start = Date.now()
+  await setTimeout(() => {
+    const start = Date.now()
 
-  intervalId = setInterval(() => {
-    const elapsed = Date.now() - start
-    const progress = Math.min(elapsed / 5000, 1)
-    timer.value = progress * 100
+    intervalId = setInterval(() => {
+      const elapsed = Date.now() - start
+      const progress = Math.min(elapsed / 5000, 1)
+      timer.value = progress * 100
 
-    if (progress === 1) {
-      clearInterval(intervalId!)
-    }
-  }, 16)
+      if (progress === 1) {
+        clearInterval(intervalId!)
+      }
+    }, 16)
 
-  timeoutID = setTimeout(() => {
-    router.push({
-      name: 'details',
-      params: { name: data.getNext(data.findCurrentIndex(route.params.name as string) as number) },
-    })
-  }, 5000)
+    timeoutID = setTimeout(() => {
+      router.push({
+        name: 'details',
+        params: {
+          name: data.getNext(data.findCurrentIndex(route.params.name as string) as number),
+        },
+      })
+    }, 5000)
+  }, 2000)
 }
 
 function clearTimer() {

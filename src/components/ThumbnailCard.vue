@@ -1,16 +1,27 @@
 <script lang="ts" setup>
 import { useDataStore } from '@/stores/data'
+import { useTimerStore } from '@/stores/timer'
+import { useRouter } from 'vue-router'
 
 const data = useDataStore()
 
+const timer = useTimerStore()
+
+const router = useRouter()
+
 const base = import.meta.env.BASE_URL
+
+function clickCard(painting: string) {
+  const name = 'details'
+  const param = { name: painting.replace(/ /g, '').trim() }
+
+  timer.fromClick = 'card'
+
+  router.push({ name: name, params: param })
+}
 </script>
 <template>
-  <RouterLink
-    :to="{ name: 'details', params: { name: painting.name.replace(/ /g, '').trim() } }"
-    v-for="painting in data.json"
-    class="card"
-  >
+  <div class="card" v-for="painting in data.json" @click="clickCard(painting.name)">
     <span class="sr-only">link to painting details of {{ painting.name }}</span>
     <img
       :src="base + painting.images.thumbnail.replace('./assets', '/assets/images')"
@@ -21,7 +32,7 @@ const base = import.meta.env.BASE_URL
       <p class="card__name">{{ painting.name }}</p>
       <p class="card__artist">{{ painting.artist.name }}</p>
     </div>
-  </RouterLink>
+  </div>
 </template>
 <style lang="scss" scoped>
 @use '@/assets/styles/main.scss' as v;
@@ -35,6 +46,8 @@ a {
 
   display: grid;
   grid-template-rows: 1fr min-content;
+
+  cursor: pointer;
 }
 
 .card__artist {

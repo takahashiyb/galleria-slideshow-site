@@ -1,129 +1,66 @@
 <script lang="ts" setup>
-import { useDataStore } from '@/stores/data'
+import { useTimerStore } from '@/stores/timer'
 import type { Painting } from '@/types/types'
-import { ref, watch, onBeforeMount, onUnmounted } from 'vue'
+import { watch, onBeforeMount, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 
 const router = useRouter()
 
-const data = useDataStore()
-
-const painting = ref<Painting>({
-  name: '',
-  year: 0,
-  description: '',
-  source: '',
-  artist: {
-    image: './assets/starry-night/artist.jpg',
-    name: '',
-  },
-  images: {
-    thumbnail: './assets/starry-night/thumbnail.jpg',
-    hero: {
-      small: './assets/starry-night/hero-small.jpg',
-      large: './assets/starry-night/hero-large.jpg',
-    },
-    gallery: './assets/starry-night/gallery.jpg',
-  },
-})
-
-const nextPainting = ref()
-const beforePainting = ref()
-const timer = ref(0)
-
-let intervalId = null
-let timeoutID = null
-
-function onLoadPage(newId: string) {
-  painting.value = data.findCurrentPage(newId as string) as Painting
-
-  const index = data.findCurrentIndex(newId as string) as number
-
-  beforePainting.value = { name: 'details', params: { name: data.getBefore(index) } }
-
-  nextPainting.value = { name: 'details', params: { name: data.getNext(index) } }
-}
-
-async function isRunning() {
-  clearTimer()
-  timer.value = 0
-
-  await setTimeout(() => {
-    const start = Date.now()
-
-    intervalId = setInterval(() => {
-      const elapsed = Date.now() - start
-      const progress = Math.min(elapsed / 5000, 1)
-      timer.value = progress * 100
-
-      if (progress === 1) {
-        clearInterval(intervalId!)
-      }
-    }, 16)
-
-    timeoutID = setTimeout(() => {
-      router.push({
-        name: 'details',
-        params: {
-          name: data.getNext(data.findCurrentIndex(route.params.name as string) as number),
-        },
-      })
-    }, 5000)
-  }, 2000)
-}
-
-function clearTimer() {
-  if (intervalId!) {
-    clearInterval(intervalId)
-  }
-  if (timeoutID!) {
-    clearTimeout(timeoutID)
-  }
-}
+const timer = useTimerStore()
 
 // watch for param changes
 watch(
   () => route.params.name,
   (newId, oldId) => {
-    onLoadPage(newId as string)
-
-    isRunning()
+    timer.onLoadPage(newId as string)
+    if (timer.fromClick === 'timer') {
+      timer.isRunning(router, route)
+    }
+    if (timer.fromClick === 'card') {
+      timer.clearTimer()
+    }
   },
 )
 
 onBeforeMount(() => {
   const newId = route.params.name as string
 
-  onLoadPage(newId as string)
-
-  isRunning()
+  timer.onLoadPage(newId as string)
 })
 
 onUnmounted(() => {
-  clearTimer()
+  timer.clearTimer()
 })
+
+function pressPrevious() {
+  router.push(timer.beforePainting)
+}
+
+function pressNext() {
+  router.push(timer.nextPainting)
+}
 </script>
 <template>
   <footer>
     <div class="countdown-bar">
-      <div class="progress" :style="`width: ${timer}%`"></div>
+      <div class="progress" :style="`width: ${timer.timer}%`"></div>
     </div>
     <div class="footer__current">
-      <p class="footer__name">{{ painting.name }}</p>
-      <p class="footer__artist">{{ painting.artist.name }}</p>
+      <p class="footer__name">{{ (timer.painting as Painting).name }}</p>
+      <p class="footer__artist">{{ (timer.painting as Painting).artist.name }}</p>
     </div>
-    <div class="footer__control">
-      <RouterLink :to="beforePainting">
+    <nav class="footer__control">
+      <div class="button__control" @click="pressPrevious">
         <img src="/src/assets//icons//icon-back-button.svg" alt="back icon" />
         <span class="sr-only">click to redirect previous painting</span>
-      </RouterLink>
-      <RouterLink :to="nextPainting">
+      </div>
+      <div class="button__control" @click="pressNext">
         <img src="/src/assets//icons//icon-next-button.svg" alt="next icon" />
         <span class="sr-only">click to redirect next painting</span>
-      </RouterLink>
-    </div>
+      </div>
+    </nav>
   </footer>
 </template>
 <style lang="scss" scoped>
@@ -159,6 +96,10 @@ footer {
 
   grid-column: 3;
   grid-row: 2;
+}
+
+.button__control {
+  cursor: pointer;
 }
 
 .footer__control button {

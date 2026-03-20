@@ -1,38 +1,100 @@
 <script lang="ts" setup>
 import { useDataStore } from '@/stores/data'
+import { useTimerStore } from '@/stores/timer'
 import { ref, onBeforeMount } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 
+const router = useRouter()
+
 const data = useDataStore()
 
-const page = ref()
+const timer = useTimerStore()
 
-const slideshowText = ref('')
+const page = ref<{ name: string; params?: { name: string } }>()
 
 onBeforeMount(() => {
   if (route.name === 'home') {
     page.value = { name: 'details', params: { name: data.getLastSeen } }
-    slideshowText.value = 'START SLIDESHOW'
+
+    timer.slideshowText = 'START SLIDESHOW'
   }
 
-  if (route.name === 'details') {
-    page.value = { name: 'home' }
-    slideshowText.value = 'STOP SLIDESHOW'
+  if (route.name === 'details' && timer.fromClick === 'card') {
+    timer.slideshowText = 'START SLIDESHOW'
+
+    return
+  }
+
+  if ((route.name === 'details' && timer.fromClick === 'nav') || timer.fromClick === 'timer') {
+    switchButtonText('stop')
+
+    return runTimerIsRunning('start')
   }
 })
+
+function clickedSlideshow() {
+  if (timer.slideshowText === 'START SLIDESHOW' && route.name === 'home') {
+    router.push(page.value as object)
+    timer.fromClick = 'timer'
+  }
+
+  if (timer.slideshowText === 'START SLIDESHOW' && route.name === 'details') {
+    switchButtonText('stop')
+    timer.fromClick = 'timer'
+    return runTimerIsRunning('start')
+  }
+
+  if (timer.slideshowText === 'STOP SLIDESHOW' && route.name === 'details') {
+    switchButtonText('start')
+    return runTimerIsRunning('stop')
+  }
+}
+
+function runTimerIsRunning(status: string) {
+  if (status === 'start') {
+    timer.isRunning(router, route)
+  }
+  if (status === 'stop') {
+    timer.clearTimer()
+  }
+}
+
+function returnHome() {
+  router.push({ name: 'home' }).then(() => {
+    switchButtonText('start')
+  })
+}
+
+function switchButtonText(name: string) {
+  if (name === 'start') {
+    timer.slideshowText = 'START SLIDESHOW'
+  }
+
+  if (name === 'stop') {
+    timer.slideshowText = 'STOP SLIDESHOW'
+  }
+}
 </script>
 
 <template>
   <header>
-    <img src="@/assets/icons/logo.svg" alt="site logo" />
-    <RouterLink :to="page" class="header__link--slideshow"
-      ><span class="sr-only"
-        >redirects to
-        {{ slideshowText === 'START SLIDESHOW' ? 'slideshow page' : 'homepage' }}</span
-      >{{ slideshowText }}</RouterLink
-    >
+    <div class="header__logo" @click="returnHome">
+      <span class="sr-only"> go to slideshow page and start it </span>
+      <img src="@/assets/icons/logo.svg" alt="site logo" />
+    </div>
+    <div class="header__link--slideshow" @click="clickedSlideshow">
+      <span class="sr-only">
+        {{
+          route.name === 'start'
+            ? 'redirects to slideshow page'
+            : timer.slideshowText === 'START SLIDESHOW'
+              ? 'play the slideshow'
+              : 'pause the slideshow'
+        }} </span
+      >{{ timer.slideshowText }}
+    </div>
   </header>
 </template>
 
@@ -59,12 +121,18 @@ header {
   z-index: 99;
 }
 
-header img {
+.header__logo {
   grid-column: 2;
   width: 100%;
+}
+
+.header__logo img {
   object-fit: contain;
   object-position: left;
+  width: 100%;
   max-height: 48px;
+
+  cursor: pointer;
 }
 
 .header__link--slideshow {
@@ -72,6 +140,8 @@ header img {
   text-align: right;
   text-decoration: none;
   color: rgba(v.$grey-400, 100%);
+
+  cursor: pointer;
 }
 
 .header__link--slideshow:hover {
